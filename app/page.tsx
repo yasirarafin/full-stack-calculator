@@ -1,65 +1,122 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import Calculator from './components/calculator';
+import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs';
 
 export default function Home() {
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const { isSignedIn, user } = useUser();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main
+      className={`min-h-screen transition-colors duration-500 ${
+        theme === 'dark'
+          ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900'
+          : 'bg-gradient-to-br from-orange-100 via-gray-100 to-blue-100'
+      }`}
+    >
+      <div className='container mx-auto p-8'>
+        {/* Header with Auth and Theme Toggle */}
+        <div className='flex justify-between items-center mb-8'>
+          {/* User Profile */}
+          <div className='flex items-center gap-4'>
+            {isSignedIn ? (
+              <div className='flex items-center gap-3'>
+                <UserButton afterSignOutUrl='/' />
+                <div
+                  className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+                >
+                  <div className='font-semibold'>Welcome back!</div>
+                  <div className='text-xs opacity-70'>
+                    {user?.primaryEmailAddress?.emailAddress}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className='flex gap-3'>
+                <SignInButton mode='modal'>
+                  <button
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      theme === 'dark'
+                        ? 'bg-slate-700 text-white hover:bg-slate-600'
+                        : 'bg-white text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode='modal'>
+                  <button className='px-4 py-2 rounded-lg text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 transition-all'>
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </div>
+            )}
+          </div>
+
+          {/* Theme Toggle */}
+          <div className='flex items-center gap-3'>
+            <span
+              className={`text-sm font-semibold ${
+                theme === 'light' ? 'text-gray-900' : 'text-gray-500'
+              }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              ☀️
+            </span>
+
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${
+                theme === 'dark' ? 'bg-slate-700' : 'bg-orange-400'
+              }`}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <motion.div
+                layout
+                transition={{ type: 'spring', stiffness: 700, damping: 30 }}
+                className='absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-lg'
+                style={{
+                  x: theme === 'dark' ? 32 : 0,
+                }}
+              />
+            </button>
+
+            <span
+              className={`text-sm font-semibold ${
+                theme === 'dark' ? 'text-white' : 'text-gray-500'
+              }`}
+            >
+              🌙
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Info Banner */}
+        {!isSignedIn && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`max-w-2xl mx-auto mb-8 p-4 rounded-2xl ${
+              theme === 'dark'
+                ? 'bg-blue-900/20 border border-blue-800/30'
+                : 'bg-blue-50 border border-blue-200'
+            }`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div
+              className={`text-sm ${theme === 'dark' ? 'text-blue-300' : 'text-blue-800'}`}
+            >
+              <strong>💡 Tip:</strong> Sign in with Google to save your
+              calculation history permanently across all your devices!
+            </div>
+          </motion.div>
+        )}
+
+        {/* Calculator */}
+        <div className='justify-center'>
+          <Calculator theme={theme} />
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
