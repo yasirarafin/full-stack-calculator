@@ -1,8 +1,3 @@
-Based on the repository structure and code provided, this is a full-stack calculator application built with **Next.js 16**, **TypeScript**, **Tailwind CSS**, and **Prisma**. It features user authentication through **Clerk**, allowing users to save their calculation history to a **PostgreSQL** database.
-
-Below is a comprehensive `README.md` file designed for this repository:
-
----
 
 # 🧮 Full-Stack Calculator App
 
