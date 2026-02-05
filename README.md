@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Based on the repository structure and code provided, this is a full-stack calculator application built with **Next.js 16**, **TypeScript**, **Tailwind CSS**, and **Prisma**. It features user authentication through **Clerk**, allowing users to save their calculation history to a **PostgreSQL** database.
 
-## Getting Started
+Below is a comprehensive `README.md` file designed for this repository:
 
-First, run the development server:
+---
 
+# 🧮 Full-Stack Calculator App
+
+A beautiful, modern calculator application built with Next.js. It supports real-time calculations, dark/light mode, and persistent history for authenticated users.
+
+## ✨ Features
+
+* **Core Calculator**: Handles basic arithmetic with a clean, responsive UI inspired by modern design systems.
+* **Authentication**: Integrated with **Clerk** for secure user sign-in and sign-up.
+* **Persistent History**:
+* **Authenticated Users**: Calculations are saved to a PostgreSQL database via Prisma.
+* **Guest Users**: Calculations are stored in `sessionStorage` and can be synced to the cloud upon signing in.
+
+
+* **Theme Support**: Smooth transition between Dark and Light modes using Framer Motion animations.
+* **Responsive Design**: Built with Tailwind CSS 4.0 for a mobile-first experience.
+
+## 🚀 Tech Stack
+
+* **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+* **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
+* **Authentication**: [Clerk](https://clerk.com/)
+* **Database ORM**: [Prisma](https://www.prisma.io/)
+* **Database**: PostgreSQL
+* **Language**: TypeScript
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+Ensure you have [Node.js](https://nodejs.org/) installed.
+
+### Installation
+
+1. **Clone the repository:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <your-repo-url>
+cd full-stack-calculator
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. **Install dependencies:**
+```bash
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+3. **Environment Variables:**
+Create a `.env` file in the root directory and add your credentials:
+```env
+DATABASE_URL="your_postgresql_connection_string"
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_pub_key
+CLERK_SECRET_KEY=your_clerk_secret_key
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+4. **Database Setup:**
+Initialize your database schema using Prisma:
+```bash
+npx prisma generate
+npx prisma db push
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+5. **Run the development server:**
+```bash
+npm run dev
+
+```
+
+
+Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) to see the app.
+
+## 📂 Project Structure
+
+* `app/api/calculations/`: API endpoints for fetching, saving, and deleting calculation history.
+* `app/components/calculator.tsx`: The main calculator logic, UI, and history management.
+* `app/page.tsx`: The main entry point featuring the theme toggle and Clerk auth buttons.
+* `lib/prisma.ts`: Singleton Prisma client configuration.
+* `prisma/schema.prisma`: Database model definition for `Calculation`.
+
+## 📡 API Endpoints
+
+* `GET /api/calculations`: Fetch the last 100 calculations for the logged-in user.
+* `POST /api/calculations`: Save a new calculation (Expression + Result).
+* `POST /api/calculations/sync`: Bulk sync `sessionStorage` history to the database after login.
+* `DELETE /api/calculations`: Clear all history for the current user.
+
+## 📜 License
+
+This project is bootstrapped with `create-next-app`. Refer to the repository for specific licensing information.
