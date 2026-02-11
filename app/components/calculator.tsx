@@ -16,33 +16,25 @@ interface CalculatorProps {
 }
 
 export default function Calculator({ theme = 'dark' }: CalculatorProps) {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn } = useUser();
   const [display, setDisplay] = useState('0');
   const [expression, setExpression] = useState('');
   const [history, setHistory] = useState<CalculationHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage] = useState('');
 
   const isDark = theme === 'dark';
 
-  // Load history based on auth state
+  // Load history only from session storage
   useEffect(() => {
-    console.log('Auth state changed - isSignedIn:', isSignedIn);
-    if (isSignedIn) {
-      fetchDatabaseHistory();
-      syncSessionHistory();
-    } else {
-      loadSessionHistory();
-    }
-  }, [isSignedIn]);
+    loadSessionHistory();
+  }, []);
 
   const loadSessionHistory = () => {
     const savedHistory = sessionStorage.getItem('calculatorHistory');
     if (savedHistory) {
       try {
         const parsed = JSON.parse(savedHistory);
-        console.log('Loaded session history:', parsed.length);
         setHistory(parsed);
       } catch (error) {
         console.error('Failed to load session history:', error);
@@ -50,71 +42,7 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
     }
   };
 
-  const fetchDatabaseHistory = async () => {
-    try {
-      console.log('Fetching database history...');
-      const response = await fetch('/api/calculations');
-
-      console.log('Response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Fetched calculations:', data.length);
-
-        const formatted = data.map((calc: any) => ({
-          id: calc.id,
-          expression: calc.expression,
-          result: calc.result,
-          timestamp: new Date(calc.createdAt).toLocaleString(),
-        }));
-        setHistory(formatted);
-        setErrorMessage('');
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to fetch:', errorData);
-        setErrorMessage('Failed to load history');
-      }
-    } catch (error) {
-      console.error('Failed to fetch database history:', error);
-      setErrorMessage('Failed to load history');
-    }
-  };
-
-  const syncSessionHistory = async () => {
-    const savedHistory = sessionStorage.getItem('calculatorHistory');
-    if (!savedHistory) {
-      console.log('No session history to sync');
-      return;
-    }
-
-    try {
-      setIsSyncing(true);
-      const sessionHistory = JSON.parse(savedHistory);
-
-      console.log('Syncing session history:', sessionHistory.length);
-
-      const response = await fetch('/api/calculations/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionHistory }),
-      });
-
-      if (response.ok) {
-        const { synced } = await response.json();
-        console.log(`Synced ${synced} calculations`);
-        sessionStorage.removeItem('calculatorHistory');
-        await fetchDatabaseHistory();
-      } else {
-        console.error('Sync failed:', await response.json());
-      }
-    } catch (error) {
-      console.error('Failed to sync session history:', error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const saveToHistory = async (expr: string, res: string) => {
+  const saveToHistory = (expr: string, res: string) => {
     const newEntry: CalculationHistory = {
       id: Date.now().toString(),
       expression: expr,
@@ -122,61 +50,15 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
       timestamp: new Date().toLocaleString(),
     };
 
-    if (isSignedIn) {
-      // Save to database
-      try {
-        console.log('Saving to database:', expr, '=', res);
-
-        const response = await fetch('/api/calculations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ expression: expr, result: res }),
-        });
-
-        console.log('Save response status:', response.status);
-
-        if (response.ok) {
-          await fetchDatabaseHistory();
-          setErrorMessage('');
-        } else {
-          const errorData = await response.json();
-          console.error('Failed to save:', errorData);
-          setErrorMessage('Failed to save calculation');
-        }
-      } catch (error) {
-        console.error('Failed to save to database:', error);
-        setErrorMessage('Failed to save calculation');
-      }
-    } else {
-      // Save to sessionStorage
-      console.log('Saving to session storage');
-      const updatedHistory = [newEntry, ...history];
-      setHistory(updatedHistory);
-      sessionStorage.setItem(
-        'calculatorHistory',
-        JSON.stringify(updatedHistory)
-      );
-    }
+    // Always save to sessionStorage
+    const updatedHistory = [newEntry, ...history];
+    setHistory(updatedHistory);
+    sessionStorage.setItem('calculatorHistory', JSON.stringify(updatedHistory));
   };
 
-  const clearHistory = async () => {
-    if (isSignedIn) {
-      try {
-        const response = await fetch('/api/calculations', {
-          method: 'DELETE',
-        });
-        if (response.ok) {
-          setHistory([]);
-          setErrorMessage('');
-        }
-      } catch (error) {
-        console.error('Failed to clear database history:', error);
-        setErrorMessage('Failed to clear history');
-      }
-    } else {
-      setHistory([]);
-      sessionStorage.removeItem('calculatorHistory');
-    }
+  const clearHistory = () => {
+    setHistory([]);
+    sessionStorage.removeItem('calculatorHistory');
   };
 
   const handleNumber = (num: string) => {
@@ -263,7 +145,7 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
   ];
 
   return (
-    <div className='min-h-screen flex items-center justify-center p-4'>
+    <div className='flex items-center justify-center p-4'>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -291,16 +173,6 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
           </button>
 
           <div className='flex items-center gap-2'>
-            {isSyncing && (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}
-              >
-                ⟳
-              </motion.div>
-            )}
-
             {history.length > 0 && (
               <motion.div
                 initial={{ scale: 0 }}
@@ -311,7 +183,7 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
                     : 'bg-gray-200 text-gray-700'
                 }`}
               >
-                {isSignedIn ? '☁️' : '💾'} {history.length}
+                💾 {history.length}
               </motion.div>
             )}
           </div>
@@ -393,8 +265,7 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
                 : 'bg-gray-200/50 text-gray-600 hover:bg-gray-300'
             }`}
           >
-            {showHistory ? '📊 Hide' : '📊 Show'}{' '}
-            {isSignedIn ? 'Cloud' : 'Session'} History
+            {showHistory ? '📊 Hide' : '📊 Show'} History
             {history.length > 0 && ` (${history.length})`}
           </button>
         </div>
@@ -418,7 +289,7 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
                       isDark ? 'text-gray-300' : 'text-gray-700'
                     }`}
                   >
-                    {isSignedIn ? '☁️ Cloud History' : '💾 Session History'}
+                    💾 Session History
                   </h3>
                   {history.length > 0 && (
                     <button
@@ -433,18 +304,6 @@ export default function Calculator({ theme = 'dark' }: CalculatorProps) {
                     </button>
                   )}
                 </div>
-
-                {!isSignedIn && (
-                  <div
-                    className={`text-xs mb-3 p-2 rounded-lg ${
-                      isDark
-                        ? 'bg-blue-900/20 text-blue-300'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    💡 Sign in to save history permanently
-                  </div>
-                )}
 
                 {history.length === 0 ? (
                   <p
